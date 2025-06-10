@@ -8,5 +8,5 @@ dotenv.config();
   setInterval(async () => {
     console.log('Scheduled scraping in progress...');
     await scrapeAndSave();
-  }, 30 * 60 * 1000);
+  }, .1 * 60 * 1000);
 })();

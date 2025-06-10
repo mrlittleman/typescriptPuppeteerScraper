@@ -87,7 +87,7 @@ export async function scrapeAndSave(): Promise<void> {
       height: 1080 + Math.floor(Math.random() * 100),
     });
 
-    await page.goto('https://www.facebook.com/groups/tfwmanilaqc', {
+    await page.goto(`https://www.facebook.com/groups/${process.env.FB_Group}`, {
       waitUntil: 'domcontentloaded',
       timeout: 60000,
     });

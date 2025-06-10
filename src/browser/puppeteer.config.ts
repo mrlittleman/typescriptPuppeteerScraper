@@ -10,8 +10,8 @@ export async function loginFacebook(email: string, password: string) {
   const page = await browser.newPage();
   await page.goto('https://www.facebook.com/login');
 
-  await page.type('#email', email, { delay: 100 });
-  await page.type('#pass', password, { delay: 100 });
+  await page.type('#email', email, { delay: 500 });
+  await page.type('#pass', password, { delay: 500 });
   await page.click('[name="login"]');
   await page.waitForNavigation({ waitUntil: 'networkidle0' });
 

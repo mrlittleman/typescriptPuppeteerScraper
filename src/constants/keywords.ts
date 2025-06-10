@@ -1,1 +1,1 @@
-export const KEYWORDS = ["Registrar", "Clearance", "Enrollment", "Department"];
+export const KEYWORDS = ["clearance","Registrar", "Enrollment", "Department", 'Graduation', 'medical','dept'];

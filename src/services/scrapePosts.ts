@@ -12,9 +12,11 @@ import fsExtra from 'fs-extra';
 import path from 'path';
 import { format } from 'date-fns';
 
+// Use Puppeteer plugins
 puppeteer.use(StealthPlugin());
 puppeteer.use(AdBlockerPlugin());
 
+// Paths for results and screenshots
 const CSV_FILE_PATH = path.resolve(__dirname, '../../results.csv');
 const SCREENSHOTS_DIR = path.resolve(__dirname, '../../screenshots');
 
@@ -35,6 +37,7 @@ const csvWriter = createObjectCsvWriter({
   append: fs.existsSync(CSV_FILE_PATH),
 });
 
+// Load existing data from the CSV file
 async function loadExistingData(): Promise<Set<string>> {
   if (!fs.existsSync(CSV_FILE_PATH)) return new Set();
   const content = fs.readFileSync(CSV_FILE_PATH, 'utf-8');
@@ -47,6 +50,14 @@ async function loadExistingData(): Promise<Set<string>> {
       return firstCommaIndex === -1 ? '' : line.slice(0, firstCommaIndex);
     });
   return new Set(texts);
+}
+
+interface Post {
+  text: string;
+  dateText: string;
+  url: string;
+  keyword: string;
+  screenshot: string;
 }
 
 export async function scrapeAndSave(): Promise<void> {
@@ -70,7 +81,7 @@ export async function scrapeAndSave(): Promise<void> {
       height: 720 + Math.floor(Math.random() * 100),
     });
 
-    await page.goto('https://www.facebook.com', {
+    await page.goto('https://www.facebook.com/groups/tfwmanilaqc', {
       waitUntil: 'domcontentloaded',
       timeout: 60000,
     });
@@ -81,7 +92,7 @@ export async function scrapeAndSave(): Promise<void> {
     });
     await randomDelay(1500, 2500);
 
-    const posts = await page.evaluate((keywords) => {
+    const posts: Post[] = await page.evaluate((keywords) => {
       const lowerKeywords = keywords.map(k => k.toLowerCase());
       const postSelector = '[role="article"]';
 
@@ -101,8 +112,8 @@ export async function scrapeAndSave(): Promise<void> {
         const linkEl = post.querySelector('a[href*="/posts/"], a[href*="/permalink/"]') as HTMLAnchorElement | null;
         const url = linkEl?.href || '';
 
-        return { text: text.trim(), dateText, url, keyword: matchedKeyword };
-      }).filter(Boolean);
+        return { text: text.trim(), dateText, url, keyword: matchedKeyword, screenshot: '' } as unknown as Post;
+      }).filter((post): post is Post => post !== null);
     }, KEYWORDS);
 
     const twoYearsAgo = new Date();
@@ -114,6 +125,7 @@ export async function scrapeAndSave(): Promise<void> {
         date: parseFbDate(dateText) || new Date(0),
         url,
         keyword,
+        screenshot: '', 
       }))
       .filter(post => post.date >= twoYearsAgo && post.text.length > 0);
 
@@ -156,9 +168,10 @@ export async function scrapeAndSave(): Promise<void> {
 
           const screenshotFileName = `post_${Date.now()}_${i}.png`;
           const screenshotPath = path.resolve(folderPath, screenshotFileName);
-
+          
+          // Taking the screenshot
           await page.screenshot({
-            path: screenshotPath,
+            path: `${screenshotPath}.png`,  
             clip: {
               x: Math.max(clip.x, 0),
               y: Math.max(clip.y, 0),
@@ -166,8 +179,8 @@ export async function scrapeAndSave(): Promise<void> {
               height: Math.min(clip.height, page.viewport()?.height || 720),
             },
           });
-
-          post.screenshot = screenshotPath;
+          
+          post.screenshot = screenshotPath; // Assign the screenshot path
         } else {
           post.screenshot = '';
         }

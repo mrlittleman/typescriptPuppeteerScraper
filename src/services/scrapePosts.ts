@@ -83,8 +83,8 @@ export async function scrapeAndSave(): Promise<void> {
     const page = await browser.newPage();
     await page.setUserAgent(getRandomUserAgent());
     await page.setViewport({
-      width: 1280 + Math.floor(Math.random() * 100),
-      height: 720 + Math.floor(Math.random() * 100),
+      width: 1920 + Math.floor(Math.random() * 100),
+      height: 1080 + Math.floor(Math.random() * 100),
     });
 
     await page.goto('https://www.facebook.com/groups/tfwmanilaqc', {
@@ -180,12 +180,7 @@ export async function scrapeAndSave(): Promise<void> {
 
           await page.screenshot({
             path: `${screenshotPath}.png`,
-            clip: {
-              x: Math.max(clip.x, 0),
-              y: Math.max(clip.y, 0),
-              width: Math.min(clip.width, page.viewport()?.width || 2560),
-              height: Math.min(clip.height, page.viewport()?.height || 1440),
-            },
+            fullPage: false,
           });
 
           foundPost.screenshot = screenshotPath;

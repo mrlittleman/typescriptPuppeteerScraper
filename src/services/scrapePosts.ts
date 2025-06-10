@@ -1,15 +1,55 @@
-import { FB_EMAIL, FB_PASSWORD } from '../config/env';
-import { getCsvWriter, loadExistingData } from '../services/csvService';
-import { parseFbDate } from '../services/dateParser';
-import { getBrowser } from '../services/browserService';
-import { KEYWORDS, SCREENSHOTS_DIR } from '../constants';
-import { randomDelay } from '../utils/delay';
-import { ensureDirExists } from '../utils/fileUtils';
-import { format } from 'date-fns';
+import puppeteer from 'puppeteer-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import AdBlockerPlugin from 'puppeteer-extra-plugin-adblocker';
+import { loginFacebook } from '../browser/puppeteer.config';
+import { randomDelay } from '../utils/fileUtils';
+import { getRandomUserAgent } from '../config/userAgents';
+import { parseFbDate } from '../utils/dateParser';
+import { KEYWORDS } from '../constants/keywords';
+import { createObjectCsvWriter } from 'csv-writer';
+import fs from 'fs';
+import fsExtra from 'fs-extra';
 import path from 'path';
-import { getRandomUserAgent } from '../config/userAgents.ts';
+import { format } from 'date-fns';
 
-export async function scrapeAndSave() {
+puppeteer.use(StealthPlugin());
+puppeteer.use(AdBlockerPlugin());
+
+const CSV_FILE_PATH = path.resolve(__dirname, '../../results.csv');
+const SCREENSHOTS_DIR = path.resolve(__dirname, '../../screenshots');
+
+if (!fs.existsSync(SCREENSHOTS_DIR)) {
+  fs.mkdirSync(SCREENSHOTS_DIR);
+}
+
+const csvWriter = createObjectCsvWriter({
+  path: CSV_FILE_PATH,
+  header: [
+    { id: 'text', title: 'Text' },
+    { id: 'date', title: 'Date' },
+    { id: 'url', title: 'URL' },
+    { id: 'screenshot', title: 'ScreenshotFilename' },
+    { id: 'keyword', title: 'Keyword' },
+    { id: 'capturedDate', title: 'CapturedDate' },
+  ],
+  append: fs.existsSync(CSV_FILE_PATH),
+});
+
+async function loadExistingData(): Promise<Set<string>> {
+  if (!fs.existsSync(CSV_FILE_PATH)) return new Set();
+  const content = fs.readFileSync(CSV_FILE_PATH, 'utf-8');
+  const lines = content.split('\n').slice(1);
+  const texts = lines
+    .map(line => line.trim())
+    .filter(line => line)
+    .map(line => {
+      const firstCommaIndex = line.indexOf(',');
+      return firstCommaIndex === -1 ? '' : line.slice(0, firstCommaIndex);
+    });
+  return new Set(texts);
+}
+
+export async function scrapeAndSave(): Promise<void> {
   let browser;
 
   try {
@@ -18,7 +58,7 @@ export async function scrapeAndSave() {
     const password = process.env.FB_PASSWORD;
 
     if (!email || !password) {
-        throw new Error('Missing FB_EMAIL or FB_PASSWORD in .env file');
+      throw new Error('Missing FB_EMAIL or FB_PASSWORD in .env file');
     }
 
     browser = await loginFacebook(email, password);
@@ -36,13 +76,11 @@ export async function scrapeAndSave() {
     });
 
     await randomDelay(2000, 4000);
-
-    await page.evaluate(async () => {
+    await page.evaluate(() => {
       window.scrollBy(0, window.innerHeight);
-      await new Promise(r => setTimeout(r, 2000));
     });
+    await randomDelay(1500, 2500);
 
-    // Correct type assertions inside evaluate
     const posts = await page.evaluate((keywords) => {
       const lowerKeywords = keywords.map(k => k.toLowerCase());
       const postSelector = '[role="article"]';
@@ -54,7 +92,6 @@ export async function scrapeAndSave() {
         const text = postEl.innerText || '';
 
         const textLower = text.toLowerCase();
-
         const matchedKeyword = lowerKeywords.find(k => textLower.includes(k));
         if (!matchedKeyword) return null;
 
@@ -66,7 +103,7 @@ export async function scrapeAndSave() {
 
         return { text: text.trim(), dateText, url, keyword: matchedKeyword };
       }).filter(Boolean);
-    }, keywords);
+    }, KEYWORDS);
 
     const twoYearsAgo = new Date();
     twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
@@ -81,7 +118,6 @@ export async function scrapeAndSave() {
       .filter(post => post.date >= twoYearsAgo && post.text.length > 0);
 
     const newPosts = filteredPosts.filter(post => !existingTexts.has(post.text));
-
     if (newPosts.length === 0) {
       console.log('No new posts found within last 2 years.');
       return;
@@ -141,7 +177,6 @@ export async function scrapeAndSave() {
       }
     }
 
-    // Append capturedDate to all records
     const newPostsWithCaptureDate = newPosts.map(post => ({
       text: post.text,
       date: post.date.toISOString(),
@@ -158,5 +193,4 @@ export async function scrapeAndSave() {
   } finally {
     if (browser) await browser.close();
   }
-
 }

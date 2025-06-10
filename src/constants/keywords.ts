@@ -1,0 +1,1 @@
+export const KEYWORDS = ["Registrar", "Clearance", "Enrollment", "Department"];

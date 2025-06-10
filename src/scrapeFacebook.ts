@@ -108,7 +108,6 @@ async function scrapeAndSave() {
       await new Promise(r => setTimeout(r, 2000));
     });
 
-    // Correct type assertions inside evaluate
     const posts = await page.evaluate((keywords) => {
       const lowerKeywords = keywords.map(k => k.toLowerCase());
       const postSelector = '[role="article"]';

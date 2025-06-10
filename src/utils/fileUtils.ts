@@ -1,8 +1,4 @@
-import fs from 'fs';
-import fsExtra from 'fs-extra';
-
-export const ensureDirExists = async (dir: string) => {
-  await fsExtra.ensureDir(dir);
-};
-
-export const fileExists = (path: string) => fs.existsSync(path);
+export function randomDelay(min: number, max: number): Promise<void> {
+  const delay = Math.floor(Math.random() * (max - min + 1)) + min;
+  return new Promise(res => setTimeout(res, delay));
+}

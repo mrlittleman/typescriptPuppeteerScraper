@@ -3,8 +3,12 @@ name: Facebook Scraper
 on:
   schedule:
     - cron: '*/30 * * * *'
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
   workflow_dispatch:
-
+  
 jobs:
   scrape:
     runs-on: ubuntu-latest

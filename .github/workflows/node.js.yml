@@ -30,8 +30,4 @@ jobs:
     - run: npm ci
     - run: npm run build --if-present
     - run: npm start
-    env:
-          FB_EMAIL: ${{ secrets.FB_EMAIL }}
-          FB_PASSWORD: ${{ secrets.FB_PASSWORD }}
-          FB_GROUP: ${{ secrets.FB_PASSWORD }}
 

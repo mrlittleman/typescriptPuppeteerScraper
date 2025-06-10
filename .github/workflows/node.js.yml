@@ -25,10 +25,10 @@ jobs:
       uses: actions/setup-node@v4
     - name: Install browsers
       uses: browser-actions/setup-chrome@latest
-      run: which google-chrome
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+    - run: which google-chrome
     - run: npm install
     - run: npm ci
     - run: npm run build --if-present

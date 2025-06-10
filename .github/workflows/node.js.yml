@@ -25,6 +25,7 @@ jobs:
       uses: actions/setup-node@v4
     - name: Install browsers
       uses: browser-actions/setup-chrome@latest
+      run: which google-chrome
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'

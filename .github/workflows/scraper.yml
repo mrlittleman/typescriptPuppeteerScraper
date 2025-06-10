@@ -33,7 +33,6 @@ jobs:
       env:
         FB_EMAIL: ${{ secrets.FB_EMAIL }}
         FB_PASSWORD: ${{ secrets.FB_PASSWORD }}
-        FB_GROUP: ${{ secrets.FB_GROUP }}
         FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
         FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
         FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}

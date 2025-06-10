@@ -6,7 +6,7 @@ puppeteer.use(StealthPlugin());
 puppeteer.use(AdBlockerPlugin());
 
 export async function loginFacebook(email: string, password: string) {
-  const browser = await puppeteer.launch({ headless: false, executablePath: '/usr/bin/google-chrome'});
+  const browser = await puppeteer.launch({ headless: true, executablePath: '/usr/bin/google-chrome'});
   const page = await browser.newPage();
   await page.goto('https://www.facebook.com/login');
 
